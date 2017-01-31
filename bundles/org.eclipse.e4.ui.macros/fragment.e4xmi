@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ASCII"?>
+<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_YY-9oNyqEeahfoXyr7VadQ">
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_czSlwNyqEeahfoXyr7VadQ" featurename="commands" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Command" xmi:id="_FfgEQNysEeahfoXyr7VadQ" elementId="org.eclipse.e4.ui.macros.toogleRecordMacro" commandName="%command.toggle_macro_record.label"/>
+    <elements xsi:type="commands:Command" xmi:id="_URWnoNyvEeahfoXyr7VadQ" elementId="org.eclipse.e4.ui.macros.macroPlayback" commandName="%command.macro_playback.name"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_kBSyoNysEeahfoXyr7VadQ" featurename="handlers" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Handler" xmi:id="_oAfMENysEeahfoXyr7VadQ" elementId="org.eclipse.e4.ui.macros.toogleRecordMacro" contributionURI="bundleclass://org.eclipse.e4.ui.macros/org.eclipse.e4.ui.macros.internal.actions.ToogleMacroRecordAction" command="_FfgEQNysEeahfoXyr7VadQ"/>
+    <elements xsi:type="commands:Handler" xmi:id="_aArh8NyvEeahfoXyr7VadQ" elementId="org.eclipse.e4.ui.macros.macroPlayback" contributionURI="bundleclass://org.eclipse.e4.ui.macros/org.eclipse.e4.ui.macros.internal.actions.MacroPlaybackAction" command="_URWnoNyvEeahfoXyr7VadQ"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_4TdEQNysEeahfoXyr7VadQ" featurename="trimContributions" parentElementId="org.eclipse.e4.legacy.ide.application" positionInList="">
+    <elements xsi:type="menu:TrimContribution" xmi:id="_7SUpINysEeahfoXyr7VadQ" elementId="org.eclipse.e4.ui.macros.trimcontribution.macro" parentId="org.eclipse.ui.main.toolbar" positionInParent="">
+      <children xsi:type="menu:ToolBar" xmi:id="_CaPHANytEeahfoXyr7VadQ" elementId="org.eclipse.e4.ui.macros.toolbar">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_IdXuINytEeahfoXyr7VadQ" elementId="org.eclipse.e4.ui.macros.handledtoolitem.commandtoggle_macro_recordlabel" label="%command.toggle_macro_record.label" iconURI="platform:/plugin/org.eclipse.e4.ui.macros/icons/full/dtool16/macro_record.png" type="Check" command="_FfgEQNysEeahfoXyr7VadQ"/>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_tB7v4NywEeahfoXyr7VadQ" elementId="org.eclipse.e4.ui.macros.handledtoolitem.commandmacro_playbackname" label="%command.macro_playback.name" iconURI="platform:/plugin/org.eclipse.e4.ui.macros/icons/full/dtool16/macro_playback.png" command="_URWnoNyvEeahfoXyr7VadQ"/>
+      </children>
+    </elements>
+  </fragments>
+</fragment:ModelFragments>

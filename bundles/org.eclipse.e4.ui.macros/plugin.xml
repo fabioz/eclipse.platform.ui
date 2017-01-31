@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.e4.core.macros.commands">
+      <whitelist
+            id="org.eclipse.e4.ui.macros.toogleRecordMacro">
+      </whitelist>
+   </extension>
+
+   <extension
+         id="org.eclipse.e4.ui.macros.fragment"
+         point="org.eclipse.e4.workbench.model">
+      <fragment
+            uri="fragment.e4xmi">
+      </fragment>
+   </extension>
+
+</plugin>

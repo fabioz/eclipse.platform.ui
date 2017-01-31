@@ -13,22 +13,29 @@ package org.eclipse.e4.ui.bindings.keys;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.core.commands.common.CommandException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.e4.core.commands.EHandlerService;
 import org.eclipse.e4.core.commands.internal.HandlerServiceImpl;
+import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.EclipseContextFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Optional;
+import org.eclipse.e4.core.macros.EMacroContext;
 import org.eclipse.e4.core.services.log.Logger;
 import org.eclipse.e4.ui.bindings.EBindingService;
 import org.eclipse.e4.ui.bindings.internal.KeyAssistDialog;
+import org.eclipse.e4.ui.bindings.internal.macro.MacroForParameterizedCommand;
 import org.eclipse.jface.bindings.Binding;
 import org.eclipse.jface.bindings.keys.KeySequence;
 import org.eclipse.jface.bindings.keys.KeyStroke;
@@ -55,6 +62,30 @@ import org.eclipse.swt.widgets.Widget;
  * </p>
  */
 public class KeyBindingDispatcher {
+
+	/**
+	 * The KeyBindingDispatcher has to know about the macro context so that it
+	 * can:
+	 *
+	 * <p>
+	 * <ul>
+	 * <li>Skip running commands which aren't accepted when recording or playing
+	 * back a macro.</li>
+	 * <li>Actually record commands which are run.</li>
+	 * </ul>
+	 * </p>
+	 *
+	 * <p>
+	 * It's <strong>not</strong> responsible for recording keystrokes which
+	 * don't map to commands. For this, the actual control or part has to do
+	 * that. I.e.: the text editor is responsible for recording key events in
+	 * the text editor (this is done so that each part takes full responsibility
+	 * for what it's doing related to the macro and there's no need to make
+	 * hacks related to it, as each part should know what it expects).
+	 * </p>
+	 */
+	@Inject
+	private EMacroContext fMacroContext;
 
 	private KeyAssistDialog keyAssistDialog = null;
 
@@ -242,6 +273,12 @@ public class KeyBindingDispatcher {
 	private Logger logger;
 
 	/**
+	 * A map which maps accepted command ids when recording a macro to whether
+	 * they should be recorded as a command to be played back later on.
+	 */
+	private Map<String, Boolean> fMacroAcceptedCommandIds;
+
+	/**
 	 * Performs the actual execution of the command by looking up the current handler from the
 	 * command manager. If there is a handler and it is enabled, then it tries the actual execution.
 	 * Execution failures are logged. When this method completes, the key binding state is reset.
@@ -301,7 +338,21 @@ public class KeyBindingDispatcher {
 		} finally {
 			staticContext.dispose();
 		}
-		return (commandDefined && commandHandled);
+		boolean executedCommand = commandDefined && commandHandled;
+		if (executedCommand) {
+			// Properly record it in the macro.
+			if (fMacroContext.isRecording()) {
+				Map<String, Boolean> macroAcceptedCommands = getMacroAcceptedCommands();
+				Boolean recordActivation = macroAcceptedCommands.get(parameterizedCommand.getId());
+				if (recordActivation) {
+					MacroForParameterizedCommand macroCommand = new MacroForParameterizedCommand(parameterizedCommand,
+							trigger);
+					ContextInjectionFactory.inject(macroCommand, context);
+					fMacroContext.addCommand(macroCommand);
+				}
+			}
+		}
+		return executedCommand;
 	}
 
 	/**
@@ -485,6 +536,26 @@ public class KeyBindingDispatcher {
 	}
 
 	/**
+	 * @return a set with the commands that are accepted when macro recording.
+	 */
+	private Map<String, Boolean> getMacroAcceptedCommands() {
+		if (fMacroAcceptedCommandIds == null) {
+			fMacroAcceptedCommandIds = new HashMap<>();
+			IExtensionRegistry registry = context.get(IExtensionRegistry.class);
+			for (IConfigurationElement ce : registry
+					.getConfigurationElementsFor("org.eclipse.e4.core.macros.commands")) { //$NON-NLS-1$
+				if ("accept".equals(ce.getName()) && ce.getAttribute("id") != null //$NON-NLS-1$ //$NON-NLS-2$
+						&& ce.getAttribute("recordActivation") != null) { //$NON-NLS-1$
+					Boolean recordActivation = Boolean.parseBoolean(ce.getAttribute("recordActivation")) ? Boolean.TRUE //$NON-NLS-1$
+							: Boolean.FALSE;
+					fMacroAcceptedCommandIds.put(ce.getAttribute("id"), recordActivation); //$NON-NLS-1$
+				}
+			}
+		}
+		return fMacroAcceptedCommandIds;
+	}
+
+	/**
 	 * @param potentialKeyStrokes
 	 * @param event
 	 * @return
@@ -503,10 +574,15 @@ public class KeyBindingDispatcher {
 
 			} else if (isPerfectMatch(sequenceAfterKeyStroke)) {
 				final ParameterizedCommand cmd = getPerfectMatch(sequenceAfterKeyStroke);
-				try {
-					return executeCommand(cmd, event) || !sequenceBeforeKeyStroke.isEmpty();
-				} catch (final CommandException e) {
-					return true;
+				// We can only run the command if we're not recording/playing
+				// back or if it's accepted.
+				if (fMacroContext == null || (!fMacroContext.isRecording() && !fMacroContext.isPlayingBack())
+						|| getMacroAcceptedCommands().containsKey(cmd.getId())) {
+					try {
+						return executeCommand(cmd, event) || !sequenceBeforeKeyStroke.isEmpty();
+					} catch (final CommandException e) {
+						return true;
+					}
 				}
 
 			} else if ((keyAssistDialog != null)
