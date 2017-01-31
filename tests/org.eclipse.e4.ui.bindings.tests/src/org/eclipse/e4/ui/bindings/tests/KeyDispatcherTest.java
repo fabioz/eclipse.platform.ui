@@ -125,6 +125,11 @@ public class KeyDispatcherTest {
 
 	@Before
 	public void setUp() {
+		// Dispose of the current default to make sure the current state doesn't
+		// mess with our tests.
+		display = Display.getDefault();
+		display.dispose();
+
 		display = Display.getDefault();
 		IEclipseContext globalContext = Activator.getDefault().getGlobalContext();
 		workbenchContext = globalContext.createChild("workbenchContext");

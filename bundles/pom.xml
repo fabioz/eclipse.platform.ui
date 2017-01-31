@@ -28,6 +28,7 @@
     <module>org.eclipse.core.databinding.observable</module>
     <module>org.eclipse.core.databinding.property</module>
     <module>org.eclipse.e4.core.commands</module>
+    <module>org.eclipse.e4.core.macros</module>
     <module>org.eclipse.e4.emf.xpath</module>
     <module>org.eclipse.e4.ui.bindings</module>
     <module>org.eclipse.e4.ui.css.core</module>
@@ -62,5 +63,6 @@
     <module>org.eclipse.ui.cocoa</module>
     <module>org.eclipse.e4.ui.swt.gtk</module>
     <module>org.eclipse.ui.navigator.resources</module>
-  </modules>
+    <module>org.eclipse.e4.ui.macros</module>
+	</modules>
 </project>

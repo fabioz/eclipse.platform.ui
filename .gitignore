@@ -8,5 +8,4 @@ heapdump.*
 core.*
 Snap.*
 /.settings/
-.project
 .DS_Store
