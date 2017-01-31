@@ -16,7 +16,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.eclipse.core.commands.Category;
@@ -30,6 +36,10 @@ import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.CanExecute;
 import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.core.macros.EMacroContext;
+import org.eclipse.e4.core.macros.IMacroPlaybackContext;
+import org.eclipse.e4.core.macros.MacroServiceAddon;
+import org.eclipse.e4.core.macros.internal.MacroManager;
 import org.eclipse.e4.ui.bindings.BindingServiceAddon;
 import org.eclipse.e4.ui.bindings.EBindingService;
 import org.eclipse.e4.ui.bindings.internal.BindingTable;
@@ -49,7 +59,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class KeyDispatcherTest {
 	private static final String ID_DIALOG = "org.eclipse.ui.contexts.dialog";
@@ -131,6 +143,7 @@ public class KeyDispatcherTest {
 		ContextInjectionFactory.make(CommandServiceAddon.class, workbenchContext);
 		ContextInjectionFactory.make(ContextServiceAddon.class, workbenchContext);
 		ContextInjectionFactory.make(BindingServiceAddon.class, workbenchContext);
+		ContextInjectionFactory.make(MacroServiceAddon.class, workbenchContext);
 		defineContexts(workbenchContext);
 		defineBindingTables(workbenchContext);
 		defineCommands(workbenchContext);
@@ -178,16 +191,7 @@ public class KeyDispatcherTest {
 
 		Shell shell = new Shell(display, SWT.NONE);
 
-		Event event = new Event();
-		event.type = SWT.KeyDown;
-		event.keyCode = SWT.CTRL;
-		shell.notifyListeners(SWT.KeyDown, event);
-
-		event = new Event();
-		event.type = SWT.KeyDown;
-		event.stateMask = SWT.CTRL;
-		event.keyCode = 'A';
-		shell.notifyListeners(SWT.KeyDown, event);
+		notifyCtrlA(shell);
 
 		assertTrue(handler.q2);
 	}
@@ -312,6 +316,118 @@ public class KeyDispatcherTest {
 
 		assertEquals("(", text.getText());
 	}
+
+
+	@Test
+	public void testMacroIntegration() throws Exception {
+		KeyBindingDispatcher dispatcher = new KeyBindingDispatcher();
+		workbenchContext.set(KeyBindingDispatcher.class, dispatcher);
+		ContextInjectionFactory.inject(dispatcher, workbenchContext);
+		EMacroContext macroContext = workbenchContext.get(EMacroContext.class);
+		macroContext.toggleMacroRecord();
+		assertTrue(macroContext.isRecording());
+
+		// Usually whitelisted commands are gotten through an extension point,
+		// but for testing
+		// purposes, let's change the field directly.
+		Field whitelistedCommandIdsField = dispatcher.getClass().getDeclaredField("fWhitelistedCommandIds");
+		whitelistedCommandIdsField.setAccessible(true);
+
+		final Listener listener = dispatcher.getKeyDownFilter();
+		display.addFilter(SWT.KeyDown, listener);
+		display.addFilter(SWT.Traverse, listener);
+
+		assertFalse(handler.q2);
+
+		Shell shell = new Shell(display, SWT.NONE);
+
+		// Whitelist command
+		whitelistedCommandIdsField.set(dispatcher, new HashSet<>(Arrays.asList(TEST_ID1)));
+		notifyCtrlA(shell);
+
+		assertTrue(handler.q2);
+
+		macroContext.toggleMacroRecord();
+		assertFalse(macroContext.isRecording());
+
+		handler.q2 = false;
+		macroContext.playbackLastMacro(new IMacroPlaybackContext() {
+
+		});
+		assertTrue(handler.q2);
+
+		// Blacklist command
+		handler.q2 = false;
+		whitelistedCommandIdsField.set(dispatcher, new HashSet<>());
+		notifyCtrlA(shell);
+		assertFalse(handler.q2);
+	}
+
+	private void notifyCtrlA(Shell shell) {
+		Event event = new Event();
+		event.type = SWT.KeyDown;
+		event.keyCode = SWT.CTRL;
+		shell.notifyListeners(SWT.KeyDown, event);
+
+		event = new Event();
+		event.type = SWT.KeyDown;
+		event.stateMask = SWT.CTRL;
+		event.keyCode = 'A';
+		shell.notifyListeners(SWT.KeyDown, event);
+	}
+
+	@Rule
+	public TemporaryFolder folder = new TemporaryFolder();
+
+	@SuppressWarnings("restriction")
+	@Test
+	public void testMacroIntegrationSaveRestore() throws Exception {
+		MacroManager macroManager = new MacroManager();
+		try (Closeable closeable = MacroManager.withTemporaryDefaultInstance(macroManager)) {
+			File macrosDirectory = folder.getRoot();
+			FilenameFilter macrosFilter = new FilenameFilter() {
+
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.endsWith(".js");
+				}
+			};
+			assertEquals(0, macrosDirectory.list(macrosFilter).length);
+
+			KeyBindingDispatcher dispatcher = new KeyBindingDispatcher();
+			workbenchContext.set(KeyBindingDispatcher.class, dispatcher);
+			ContextInjectionFactory.inject(dispatcher, workbenchContext);
+			EMacroContext macroContext = workbenchContext.get(EMacroContext.class);
+			macroContext.toggleMacroRecord();
+
+			// Usually whitelisted commands are gotten through an extension
+			// point, but for testing purposes, let's change the field directly.
+			Field whitelistedCommandIdsField = dispatcher.getClass().getDeclaredField("fWhitelistedCommandIds");
+			whitelistedCommandIdsField.setAccessible(true);
+
+			final Listener listener = dispatcher.getKeyDownFilter();
+			display.addFilter(SWT.KeyDown, listener);
+			display.addFilter(SWT.Traverse, listener);
+
+			assertFalse(handler.q2);
+
+			Shell shell = new Shell(display, SWT.NONE);
+
+			// Whitelist command
+			whitelistedCommandIdsField.set(dispatcher, new HashSet<>(Arrays.asList(TEST_ID1)));
+			notifyCtrlA(shell);
+
+			assertTrue(handler.q2);
+
+			macroContext.toggleMacroRecord();
+			// Macro was saved in the dir.
+			assertEquals(1, macrosDirectory.list(macrosFilter).length);
+
+			macroManager.reloadMacros();
+			throw new AssertionError("Finish this");
+		}
+	}
+
 
 	private void processEvents() {
 		while (display.readAndDispatch())

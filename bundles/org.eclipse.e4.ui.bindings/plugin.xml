@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.e4.core.macros.macro_command">
+      <macro_command
+            creator_class="org.eclipse.e4.ui.bindings.internal.macro.MacroForParameterizedCommandCreator"
+            macro_command_id="org.eclipse.e4.ui.bindings.keys.parameterized_macro_command">
+      </macro_command>
+   </extension>
+
+</plugin>
