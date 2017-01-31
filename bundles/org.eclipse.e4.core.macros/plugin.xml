@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="commands" name="%extension-point.commands.name" schema="schema/commands.exsd"/>
+   <extension-point id="macro_command" name="%extension-point.macro_command.name" schema="schema/macro_command.exsd"/>
+</plugin>
