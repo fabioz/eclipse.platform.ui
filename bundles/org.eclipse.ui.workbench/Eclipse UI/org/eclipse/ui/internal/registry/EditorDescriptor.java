@@ -158,11 +158,9 @@ public final class EditorDescriptor implements IEditorDescriptor, Serializable,
      * @return org.eclipse.swt.program.Program
      */
     private static Program findProgram(String programName) {
-
-        Program[] programs = Program.getPrograms();
-        for (int i = 0; i < programs.length; i++) {
-            if (programs[i].getName().equals(programName)) {
-				return programs[i];
+		for (Program program : Program.getPrograms()) {
+			if (program.getName().equals(programName)) {
+				return program;
 			}
         }
 
@@ -377,7 +375,7 @@ public final class EditorDescriptor implements IEditorDescriptor, Serializable,
      */
     public String getPluginID() {
     	if (configurationElement != null) {
-			return configurationElement.getNamespaceIdentifier();
+			return configurationElement.getNamespace();
 		}
     	return pluginIdentifier;
     }

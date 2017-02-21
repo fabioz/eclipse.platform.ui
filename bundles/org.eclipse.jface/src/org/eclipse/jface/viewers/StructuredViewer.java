@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,8 @@
  *     Jan-Ove Weichel <janove.weichel@vogella.com> - Bug 481490
  *******************************************************************************/
 package org.eclipse.jface.viewers;
+
+import static org.eclipse.swt.events.SelectionListener.widgetSelectedAdapter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +37,6 @@ import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetListener;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
@@ -83,7 +84,7 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 	 * This viewer's filters (element type: <code>ViewerFilter</code>).
 	 * <code>null</code> means there are no filters.
 	 */
-	private List filters;
+	private List<ViewerFilter> filters;
 
 	/**
 	 * Indicates whether the viewer should attempt to preserve the selection
@@ -567,7 +568,7 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 	 */
 	public void addFilter(ViewerFilter filter) {
 		if (filters == null) {
-			filters = new ArrayList();
+			filters = new ArrayList<>();
 		}
 		filters.add(filter);
 		refresh();
@@ -582,15 +583,14 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 	 */
 	protected void assertElementsNotNull(Object[] elements) {
 		Assert.isNotNull(elements);
-		for (int i = 0, n = elements.length; i < n; ++i) {
-			Assert.isNotNull(elements[i]);
+		for (Object element : elements) {
+			Assert.isNotNull(element);
 		}
 
 		if (InternalPolicy.DEBUG_LOG_EQUAL_VIEWER_ELEMENTS
 				&& elements.length > 1) {
 			CustomHashtable elementSet = newHashtable(elements.length * 2);
-			for (int i = 0; i < elements.length; i++) {
-				Object element = elements[i];
+			for (Object element : elements) {
 				Object old = elementSet.put(element, element);
 				if (old != null) {
 					String message = "Sibling elements in viewer must not be equal:\n  " //$NON-NLS-1$
@@ -728,19 +728,19 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 		if (filters != null) {
 			ArrayList filtered = new ArrayList(elements.length);
 			Object root = getRoot();
-			for (int i = 0; i < elements.length; i++) {
+			for (Object element : elements) {
 				boolean add = true;
 				for (int j = 0; j < filters.size(); j++) {
-					add = ((ViewerFilter) filters.get(j)).select(this, root, elements[i]);
+					add = filters.get(j).select(this, root, element);
 					if (!add) {
 						break;
 					}
 				}
 				if (add) {
-					filtered.add(elements[i]);
+					filtered.add(element);
 				} else {
 					if (associateListener != null)
-						associateListener.filteredOut(elements[i]);
+						associateListener.filteredOut(element);
 				}
 			}
 			return filtered.toArray();
@@ -900,8 +900,8 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 	protected Object[] getFilteredChildren(Object parent) {
 		Object[] result = getRawChildren(parent);
 		if (filters != null) {
-			for (Iterator iter = filters.iterator(); iter.hasNext();) {
-				ViewerFilter f = (ViewerFilter) iter.next();
+			for (Object element : filters) {
+				ViewerFilter f = (ViewerFilter) element;
 				Object[] filteredResult = f.filter(this, parent, result);
 				if (associateListener != null && filteredResult.length != result.length) {
 					notifyFilteredOut(result, filteredResult);
@@ -1258,12 +1258,7 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 				handleDoubleSelect(e);
 			}
 		});
-		handler.addPostSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				handlePostSelect(e);
-			}
-		});
+		handler.addPostSelectionListener(widgetSelectedAdapter(e -> handlePostSelect(e)));
 		handler.addOpenListener(StructuredViewer.this::handleOpen);
 	}
 
@@ -1366,7 +1361,7 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 
 		if (filters != null) {
 			for (int i = 0, n = filters.size(); i < n; ++i) {
-				ViewerFilter filter = (ViewerFilter) filters.get(i);
+				ViewerFilter filter = filters.get(i);
 				if (filter.isFilterProperty(element, property)) {
 					return true;
 				}
@@ -1625,7 +1620,7 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 		if (filters.length == 0) {
 			resetFilters();
 		} else {
-			this.filters = new ArrayList(Arrays.asList(filters));
+			this.filters = new ArrayList<>(Arrays.asList(filters));
 			refresh();
 		}
 	}
@@ -2028,8 +2023,8 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 		boolean previousValue = refreshOccurred;
 		refreshOccurred = false;
 		try {
-			for (int i = 0; i < elements.length; ++i) {
-				update(elements[i], properties);
+			for (Object element : elements) {
+				update(element, properties);
 				if (refreshOccurred) {
 					return;
 				}
@@ -2084,8 +2079,8 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 		Widget[] items = findItems(element);
 
 		boolean mayExitEarly = !refreshOccurred;
-		for (int i = 0; i < items.length; i++) {
-			internalUpdate(items[i], element, properties);
+		for (Widget item : items) {
+			internalUpdate(item, element, properties);
 			if (mayExitEarly && refreshOccurred) {
 				// detected a change from refreshOccurred==false to refreshOccurred==true
 				return;
@@ -2115,8 +2110,8 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 	protected void internalUpdate(Widget widget, Object element, String[] properties) {
 		boolean needsRefilter = false;
 		if (properties != null) {
-			for (int i = 0; i < properties.length; ++i) {
-				needsRefilter = needsRefilter(element, properties[i]);
+			for (String property : properties) {
+				needsRefilter = needsRefilter(element, property);
 				if (needsRefilter) {
 					break;
 				}
@@ -2136,8 +2131,8 @@ public abstract class StructuredViewer extends ContentViewer implements IPostSel
 		} else {
 			needsUpdate = false;
 			IBaseLabelProvider labelProvider = getLabelProvider();
-			for (int i = 0; i < properties.length; ++i) {
-				needsUpdate = labelProvider.isLabelProperty(element, properties[i]);
+			for (String property : properties) {
+				needsUpdate = labelProvider.isLabelProperty(element, property);
 				if (needsUpdate) {
 					break;
 				}

@@ -1740,6 +1740,11 @@
                   tooltip="%menu.toggleCoolbar.tooltip">
             </command>
             <command
+                  commandId="org.eclipse.ui.window.togglestatusbar"
+                  style="push"
+                  tooltip="%menu.toggleStatusBar.tooltip">
+            </command>
+            <command
                   commandId="org.eclipse.ui.window.fullscreenmode"
                   style="push">
             </command>

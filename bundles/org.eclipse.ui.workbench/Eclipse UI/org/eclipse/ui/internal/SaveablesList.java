@@ -13,6 +13,8 @@
 
 package org.eclipse.ui.internal;
 
+import static org.eclipse.swt.events.SelectionListener.widgetSelectedAdapter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,8 +41,6 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.window.IShellProvider;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -228,8 +228,8 @@ public class SaveablesList implements ISaveablesLifecycleListener {
 			Saveable[] models = event.getSaveables();
 			Map<Saveable, Integer> modelsDecrementing = new HashMap<>();
 			Set<Saveable> modelsClosing = new HashSet<>();
-			for (int i = 0; i < models.length; i++) {
-				incrementRefCount(modelsDecrementing, models[i]);
+			for (Saveable model : models) {
+				incrementRefCount(modelsDecrementing, model);
 			}
 
 			fillModelsClosing(modelsClosing, modelsDecrementing);
@@ -269,8 +269,7 @@ public class SaveablesList implements ISaveablesLifecycleListener {
 	 */
 	private void removeModels(Object source, Saveable[] modelArray) {
 		List<Saveable> removed = new ArrayList<>();
-		for (int i = 0; i < modelArray.length; i++) {
-			Saveable model = modelArray[i];
+		for (Saveable model : modelArray) {
 			if (removeModel(source, model)) {
 				removed.add(model);
 			}
@@ -288,8 +287,7 @@ public class SaveablesList implements ISaveablesLifecycleListener {
 	 */
 	private void addModels(Object source, Saveable[] modelArray) {
 		List<Saveable> added = new ArrayList<>();
-		for (int i = 0; i < modelArray.length; i++) {
-			Saveable model = modelArray[i];
+		for (Saveable model : modelArray) {
 			if (addModel(source, model)) {
 				added.add(model);
 			}
@@ -382,10 +380,8 @@ public class SaveablesList implements ISaveablesLifecycleListener {
 					continue;
 				}
 			}
-			Saveable[] modelsFromSource = getSaveables(part);
-			for (int i = 0; i < modelsFromSource.length; i++) {
-				incrementRefCount(postCloseInfo.modelsDecrementing,
-						modelsFromSource[i]);
+			for (Saveable saveableModel : getSaveables(part)) {
+				incrementRefCount(postCloseInfo.modelsDecrementing, saveableModel);
 			}
 		}
 		fillModelsClosing(postCloseInfo.modelsClosing,
@@ -806,12 +802,7 @@ public class SaveablesList implements ISaveablesLifecycleListener {
 				 checkboxComposite.setLayout(new GridLayout(2, false));
 
 				 checkbox = new Button(checkboxComposite, SWT.CHECK);
-				 checkbox.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						dontPromptSelection = checkbox.getSelection();
-					}
-				 });
+				 checkbox.addSelectionListener(widgetSelectedAdapter(e -> dontPromptSelection = checkbox.getSelection()));
 				 GridData gd = new GridData();
 				 gd.horizontalAlignment = SWT.BEGINNING;
 				 checkbox.setLayoutData(gd);

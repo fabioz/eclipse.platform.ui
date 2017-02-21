@@ -25,7 +25,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
-import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.eclipse.core.runtime.CoreException;
@@ -601,31 +600,6 @@ public final class Util {
 	}
 
 	/**
-	 * Returns the result of converting a list of comma-separated tokens into an array.
-	 * Used as a replacement for <code>String.split(String)</code>, to allow compilation
-	 * against JCL Foundation (bug 80053).
-	 *
-	 * @param prop the initial comma-separated string
-	 * @param separator the separator characters
-	 * @return the array of string tokens
-	 * @since 3.1
-	 */
-	public static String[] getArrayFromList(String prop, String separator) {
-		if (prop == null || prop.trim().equals("")) { //$NON-NLS-1$
-			return new String[0];
-		}
-		ArrayList list = new ArrayList();
-		StringTokenizer tokens = new StringTokenizer(prop, separator);
-		while (tokens.hasMoreTokens()) {
-			String token = tokens.nextToken().trim();
-			if (!token.equals("")) { //$NON-NLS-1$
-				list.add(token);
-			}
-		}
-		return list.isEmpty() ? new String[0] : (String[]) list.toArray(new String[list.size()]);
-	}
-
-	/**
 	 * Two {@link String}s presented in a list form.
 	 * This method can be used to form a longer list by providing a list for
 	 * <code>item1</code> and an item to append to the list for
@@ -670,11 +644,11 @@ public final class Util {
 	 */
 	public static String createList(Object[] items) {
 		String list = null;
-		for (int i = 0; i < items.length; i++) {
+		for (Object item : items) {
 			if(list == null) {
-				list = items[i].toString();
+				list = item.toString();
 			} else {
-				list = createList(list, items[i].toString());
+				list = createList(list, item.toString());
 			}
 		}
 		return safeString(list);

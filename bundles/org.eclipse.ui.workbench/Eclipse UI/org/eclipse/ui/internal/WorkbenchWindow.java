@@ -15,6 +15,7 @@
  *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 431446, 433979, 440810, 441184, 472654, 486632
  *     Denis Zygann <d.zygann@web.de> - Bug 457390
  *     Andrey Loskutov <loskutov@gmx.de> - Bug 372799
+ *     Axel Richard <axel.richard@obeo.fr> - Bug 354538
  *******************************************************************************/
 
 package org.eclipse.ui.internal;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.expressions.Expression;
@@ -248,6 +250,10 @@ public class WorkbenchWindow implements IWorkbenchWindow {
 	private WorkbenchWindowAdvisor windowAdvisor;
 
 	private ActionBarAdvisor actionBarAdvisor;
+
+	private MenuManagerRenderer renderer;
+
+	private MMenu mainMenu;
 
 	private PageListenerList pageListeners = new PageListenerList();
 
@@ -681,10 +687,10 @@ public class WorkbenchWindow implements IWorkbenchWindow {
 
 			Shell shell = (Shell) model.getWidget();
 			if (model.getMainMenu() == null) {
-				final MMenu mainMenu = modelService.createModelElement(MMenu.class);
+				mainMenu = modelService.createModelElement(MMenu.class);
 				mainMenu.setElementId(ActionSet.MAIN_MENU);
 
-				final MenuManagerRenderer renderer = (MenuManagerRenderer) rendererFactory
+				renderer = (MenuManagerRenderer) rendererFactory
 						.getRenderer(mainMenu, null);
 				renderer.linkModelToManager(mainMenu, menuManager);
 				fill(renderer, mainMenu, menuManager);
@@ -783,6 +789,15 @@ public class WorkbenchWindow implements IWorkbenchWindow {
 		} finally {
 			HandlerServiceImpl.pop();
 		}
+	}
+
+	@PreDestroy
+	void preDestroy() {
+		if (mainMenu != null) {
+			renderer.clearModelToManager(mainMenu, menuManager);
+			mainMenu = null;
+		}
+		renderer = null;
 	}
 
 	private void configureShell(Shell shell, IEclipseContext context) {
@@ -1472,9 +1487,7 @@ STATUS_LINE_ID, model);
 		final Shell shell = getShell();
 		if (shell != null) {
 			final Expression expression = new ActiveShellExpression(shell);
-			for (Iterator<Entry<String, ActionHandler>> iterator = handlersByCommandId.entrySet()
-					.iterator(); iterator.hasNext();) {
-				Entry<String, ActionHandler> entry = iterator.next();
+			for (Entry<String, ActionHandler> entry : handlersByCommandId.entrySet()) {
 				String commandId = entry.getKey();
 				IHandler handler = entry.getValue();
 				newHandlers.add(handlerService.activateHandler(commandId, handler, expression));
@@ -1509,10 +1522,9 @@ STATUS_LINE_ID, model);
 	private void firePropertyChanged(final String property, final Object oldValue,
 			final Object newValue) {
 		PropertyChangeEvent event = new PropertyChangeEvent(this, property, oldValue, newValue);
-		Object[] listeners = genericPropertyListeners.getListeners();
-		for (int i = 0; i < listeners.length; i++) {
-			IPropertyChangeListener listener = (IPropertyChangeListener) listeners[i];
-			listener.propertyChange(event);
+		for (Object listener : genericPropertyListeners.getListeners()) {
+			IPropertyChangeListener propertyChangeListener = (IPropertyChangeListener) listener;
+			propertyChangeListener.propertyChange(event);
 		}
 	}
 
@@ -1691,12 +1703,11 @@ STATUS_LINE_ID, model);
 	 */
 	private void allowUpdates(IMenuManager menuManager) {
 		menuManager.markDirty();
-		final IContributionItem[] items = menuManager.getItems();
-		for (int i = 0; i < items.length; i++) {
-			if (items[i] instanceof IMenuManager) {
-				allowUpdates((IMenuManager) items[i]);
-			} else if (items[i] instanceof SubContributionItem) {
-				final IContributionItem innerItem = ((SubContributionItem) items[i]).getInnerItem();
+		for (IContributionItem item : menuManager.getItems()) {
+			if (item instanceof IMenuManager) {
+				allowUpdates((IMenuManager) item);
+			} else if (item instanceof SubContributionItem) {
+				final IContributionItem innerItem = ((SubContributionItem) item).getInnerItem();
 				if (innerItem instanceof IMenuManager) {
 					allowUpdates((IMenuManager) innerItem);
 				}
@@ -2267,8 +2278,7 @@ STATUS_LINE_ID, model);
 		IEvaluationService es = serviceLocator
 				.getService(IEvaluationService.class);
 		IEvaluationContext currentState = es.getCurrentState();
-		for (int i = 0; i < refs.length; i++) {
-			EvaluationReference reference = refs[i];
+		for (EvaluationReference reference : refs) {
 			reference.setPostingChanges(true);
 
 			boolean os = reference.evaluate(currentState);
@@ -2434,9 +2444,8 @@ STATUS_LINE_ID, model);
 
 	private final void fireActionSetsChanged() {
 		if (actionSetListeners != null) {
-			final Object[] listeners = actionSetListeners.getListeners();
-			for (int i = 0; i < listeners.length; i++) {
-				final IActionSetsListener listener = (IActionSetsListener) listeners[i];
+			for (Object listener : actionSetListeners.getListeners()) {
+				final IActionSetsListener actionSetsListener = (IActionSetsListener) listener;
 				final WorkbenchPage currentPage = (WorkbenchPage) getActivePage();
 				final IActionSetDescriptor[] newActionSets;
 				if (currentPage == null) {
@@ -2445,7 +2454,7 @@ STATUS_LINE_ID, model);
 					newActionSets = currentPage.getActionSets();
 				}
 				final ActionSetsEvent event = new ActionSetsEvent(newActionSets);
-				listener.actionSetsChanged(event);
+				actionSetsListener.actionSetsChanged(event);
 			}
 		}
 	}
@@ -2836,10 +2845,9 @@ STATUS_LINE_ID, model);
 	}
 
 	/* package */void fireBackgroundSaveStarted() {
-		Object[] listeners = backgroundSaveListeners.getListeners();
-		for (int i = 0; i < listeners.length; i++) {
-			IBackgroundSaveListener listener = (IBackgroundSaveListener) listeners[i];
-			listener.handleBackgroundSaveStarted();
+		for (Object listener : backgroundSaveListeners.getListeners()) {
+			IBackgroundSaveListener backgroundSaveListener = (IBackgroundSaveListener) listener;
+			backgroundSaveListener.handleBackgroundSaveStarted();
 		}
 	}
 

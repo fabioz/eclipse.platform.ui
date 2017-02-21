@@ -14,6 +14,8 @@
  *******************************************************************************/
 package org.eclipse.ui.dialogs;
 
+import static org.eclipse.swt.events.SelectionListener.widgetSelectedAdapter;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -24,8 +26,6 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
@@ -118,21 +118,11 @@ public class TypeFilteringDialog extends SelectionDialog {
         composite.setData(data);
         Button selectButton = createButton(buttonComposite,
                 IDialogConstants.SELECT_ALL_ID, WorkbenchMessages.WizardTransferPage_selectAll, false);
-        SelectionListener listener = new SelectionAdapter() {
-            @Override
-			public void widgetSelected(SelectionEvent e) {
-                listViewer.setAllChecked(true);
-            }
-        };
+        SelectionListener listener = widgetSelectedAdapter(e -> listViewer.setAllChecked(true));
         selectButton.addSelectionListener(listener);
         Button deselectButton = createButton(buttonComposite,
                 IDialogConstants.DESELECT_ALL_ID, WorkbenchMessages.WizardTransferPage_deselectAll, false);
-        listener = new SelectionAdapter() {
-            @Override
-			public void widgetSelected(SelectionEvent e) {
-                listViewer.setAllChecked(false);
-            }
-        };
+        listener = widgetSelectedAdapter(e -> listViewer.setAllChecked(false));
         deselectButton.addSelectionListener(listener);
     }
 
@@ -168,8 +158,7 @@ public class TypeFilteringDialog extends SelectionDialog {
         IFileEditorMapping editorMappings[] = ((EditorRegistry) PlatformUI
 				.getWorkbench().getEditorRegistry()).getUnifiedMappings();
         ArrayList selectedMappings = new ArrayList();
-        for (int i = 0; i < editorMappings.length; i++) {
-            IFileEditorMapping mapping = editorMappings[i];
+        for (IFileEditorMapping mapping : editorMappings) {
             //Check for both extension and label matches
             if (this.initialSelections.contains(mapping.getExtension())) {
                 listViewer.setChecked(mapping, true);
@@ -263,9 +252,9 @@ public class TypeFilteringDialog extends SelectionDialog {
             List wildcardEditors = new ArrayList();
             IFileEditorMapping[] allMappings = ((EditorRegistry)PlatformUI.getWorkbench()
                     .getEditorRegistry()).getUnifiedMappings();
-            for (int i = 0; i < allMappings.length; i++) {
-                if (allMappings[i].getName().equals("*")) { //$NON-NLS-1$
-					wildcardEditors.add(allMappings[i]);
+            for (IFileEditorMapping allMapping : allMappings) {
+                if (allMapping.getName().equals("*")) { //$NON-NLS-1$
+					wildcardEditors.add(allMapping);
 				}
             }
             currentInput = new IFileEditorMapping[wildcardEditors.size()];
@@ -292,8 +281,7 @@ public class TypeFilteringDialog extends SelectionDialog {
         IFileEditorMapping[] children = getInput();
         List list = new ArrayList();
         // Build a list of selected children.
-        for (int i = 0; i < children.length; ++i) {
-            IFileEditorMapping element = children[i];
+        for (IFileEditorMapping element : children) {
             if (listViewer.getChecked(element)) {
 				list.add(element.getExtension());
 			}

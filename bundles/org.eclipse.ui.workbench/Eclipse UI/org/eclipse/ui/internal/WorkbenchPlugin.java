@@ -71,7 +71,6 @@ import org.eclipse.ui.internal.themes.IThemeRegistry;
 import org.eclipse.ui.internal.themes.ThemeRegistry;
 import org.eclipse.ui.internal.themes.ThemeRegistryReader;
 import org.eclipse.ui.internal.util.BundleUtility;
-import org.eclipse.ui.internal.util.Util;
 import org.eclipse.ui.internal.wizards.ExportWizardRegistry;
 import org.eclipse.ui.internal.wizards.ImportWizardRegistry;
 import org.eclipse.ui.internal.wizards.NewWizardRegistry;
@@ -494,10 +493,10 @@ public class WorkbenchPlugin extends AbstractUIPlugin {
         IConfigurationElement targetElement = null;
         IConfigurationElement[] configElements = extensionPoint
                 .getConfigurationElements();
-        for (int j = 0; j < configElements.length; j++) {
-            String strID = configElements[j].getAttribute("id"); //$NON-NLS-1$
+        for (IConfigurationElement configElement : configElements) {
+            String strID = configElement.getAttribute("id"); //$NON-NLS-1$
             if (targetID.equals(strID)) {
-                targetElement = configElements[j];
+                targetElement = configElement;
                 break;
             }
         }
@@ -847,12 +846,12 @@ public class WorkbenchPlugin extends AbstractUIPlugin {
 			}
 		}
 		if (bidiParams != null) {
-			String[] bidiProps = Util.getArrayFromList(bidiParams, ";"); //$NON-NLS-1$
-			for (int i = 0; i < bidiProps.length; ++i) {
-				int eqPos = bidiProps[i].indexOf("="); //$NON-NLS-1$
-				if ((eqPos > 0) && (eqPos < bidiProps[i].length() - 1)) {
-					String nameProp = bidiProps[i].substring(0, eqPos);
-					String valProp = bidiProps[i].substring(eqPos + 1);
+			String[] bidiProps = bidiParams.split(";"); //$NON-NLS-1$
+			for (String bidiProp : bidiProps) {
+				int eqPos = bidiProp.indexOf("="); //$NON-NLS-1$
+				if ((eqPos > 0) && (eqPos < bidiProp.length() - 1)) {
+					String nameProp = bidiProp.substring(0, eqPos);
+					String valProp = bidiProp.substring(eqPos + 1);
 					if (nameProp.equals(BIDI_SUPPORT_OPTION)) {
 						BidiUtils.setBidiSupport("y".equals(valProp)); //$NON-NLS-1$
 					} else if (nameProp.equalsIgnoreCase(BIDI_TEXTDIR_OPTION)) {

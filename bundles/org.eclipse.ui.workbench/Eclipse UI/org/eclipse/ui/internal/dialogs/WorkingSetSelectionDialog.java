@@ -12,6 +12,8 @@
  *******************************************************************************/
 package org.eclipse.ui.internal.dialogs;
 
+import static org.eclipse.swt.events.SelectionListener.widgetSelectedAdapter;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -26,8 +28,6 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -158,12 +158,7 @@ public class WorkingSetSelectionDialog extends AbstractWorkingSetDialog {
 
 		createMessageArea(composite);
 
-		SelectionListener listener = new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateButtonAvailability();
-			}
-		};
+		SelectionListener listener = widgetSelectedAdapter(e -> updateButtonAvailability());
 
 		buttonWindowSet = new Button(composite, SWT.RADIO);
 		buttonWindowSet.setText(WorkbenchMessages.WindowWorkingSets);
@@ -375,8 +370,8 @@ public class WorkingSetSelectionDialog extends AbstractWorkingSetDialog {
     private String getAggregateIdForSets(IWorkingSet[] typedResult) {
     		StringBuffer buffer = new StringBuffer();
     		buffer.append("Aggregate:"); //$NON-NLS-1$
-    		for (int i = 0; i < typedResult.length; i++) {
-			buffer.append(typedResult[i].getName()).append(':');
+    		for (IWorkingSet element : typedResult) {
+			buffer.append(element.getName()).append(':');
 		}
 		return buffer.toString();
 	}

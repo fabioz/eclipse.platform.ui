@@ -21,7 +21,6 @@ import java.util.LinkedList;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IBundleGroup;
 import org.eclipse.core.runtime.IBundleGroupProvider;
@@ -32,7 +31,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.about.ISystemSummarySection;
 import org.eclipse.ui.internal.WorkbenchMessages;
 import org.eclipse.ui.internal.WorkbenchPlugin;
-import org.eclipse.ui.internal.util.Util;
 import org.osgi.framework.Bundle;
 
 /**
@@ -91,9 +89,9 @@ public class ConfigurationLogDefaultSection implements ISystemSummarySection {
     }
 
     private static void printEclipseProperty(PrintWriter writer, String value) {
-        String[] lines = Util.getArrayFromList(value, "\n"); //$NON-NLS-1$
-        for (int i = 0; i < lines.length; ++i) {
-			writer.println(lines[i]);
+		String[] lines = value.split("\n"); //$NON-NLS-1$
+        for (String line : lines) {
+			writer.println(line);
 		}
     }
 
@@ -107,10 +105,10 @@ public class ConfigurationLogDefaultSection implements ISystemSummarySection {
         IBundleGroupProvider[] providers = Platform.getBundleGroupProviders();
         LinkedList groups = new LinkedList();
         if (providers != null) {
-			for (int i = 0; i < providers.length; ++i) {
-                IBundleGroup[] bundleGroups = providers[i].getBundleGroups();
-                for (int j = 0; j < bundleGroups.length; ++j) {
-					groups.add(new AboutBundleGroupData(bundleGroups[j]));
+			for (IBundleGroupProvider provider : providers) {
+                IBundleGroup[] bundleGroups = provider.getBundleGroups();
+                for (IBundleGroup bundleGroup : bundleGroups) {
+					groups.add(new AboutBundleGroupData(bundleGroup));
 				}
             }
 		}
@@ -119,8 +117,7 @@ public class ConfigurationLogDefaultSection implements ISystemSummarySection {
 
         AboutData.sortById(false, bundleGroupInfos);
 
-        for (int i = 0; i < bundleGroupInfos.length; ++i) {
-            AboutBundleGroupData info = bundleGroupInfos[i];
+        for (AboutBundleGroupData info : bundleGroupInfos) {
             String[] args = new String[] { info.getId(), info.getVersion(),
                     info.getName() };
             writer.println(NLS.bind(WorkbenchMessages.SystemSummary_featureVersion, args));
@@ -143,8 +140,7 @@ public class ConfigurationLogDefaultSection implements ISystemSummarySection {
 
         AboutData.sortById(false, bundleInfos);
 
-        for (int i = 0; i < bundleInfos.length; ++i) {
-            AboutBundleData info = bundleInfos[i];
+        for (AboutBundleData info : bundleInfos) {
             String[] args = new String[] { info.getId(), info.getVersion(),
                     info.getName(), info.getStateName() };
             writer.println(NLS.bind(WorkbenchMessages.SystemSummary_descriptorIdVersionState, args));

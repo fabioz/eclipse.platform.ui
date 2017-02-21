@@ -15,6 +15,7 @@
  *     Sopot Cela <scela@redhat.com> - Bug 472761
  *     Patrik Suzzi <psuzzi@gmail.com> - Bug 473184
  *     Simon Scholz <simon.scholz@vogella.com> - Bug 506306
+ *     Axel Richard <axel.richard@oebo.fr> - Bug 354538
  *******************************************************************************/
 package org.eclipse.e4.ui.workbench.renderers.swt;
 
@@ -26,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import org.eclipse.core.expressions.ExpressionInfo;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
@@ -34,11 +36,13 @@ import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.contexts.RunAndTrack;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.services.events.IEventBroker;
+import org.eclipse.e4.core.services.log.Logger;
 import org.eclipse.e4.ui.di.UIEventTopic;
 import org.eclipse.e4.ui.internal.workbench.ContributionsAnalyzer;
 import org.eclipse.e4.ui.internal.workbench.OpaqueElementUtil;
 import org.eclipse.e4.ui.internal.workbench.swt.AbstractPartRenderer;
 import org.eclipse.e4.ui.internal.workbench.swt.CSSRenderingUtils;
+import org.eclipse.e4.ui.internal.workbench.swt.Policy;
 import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.e4.ui.model.application.MApplicationElement;
 import org.eclipse.e4.ui.model.application.ui.MElementContainer;
@@ -103,6 +107,9 @@ public class ToolBarManagerRenderer extends SWTPartRenderer {
 	private Map<MToolBarElement, ArrayList<ToolBarContributionRecord>> sharedElementToRecord = new HashMap<>();
 
 	private ToolItemUpdater enablementUpdater = new ToolItemUpdater();
+
+	@Inject
+	private Logger logger;
 
 	@Inject
 	private MApplication application;
@@ -348,6 +355,14 @@ public class ToolBarManagerRenderer extends SWTPartRenderer {
 		context.runAndTrack(enablementUpdater);
 	}
 
+	@PreDestroy
+	void preDestroy() {
+		if (Policy.DEBUG_RENDERER) {
+			logger.debug("\nTBMR:dispose: modelToManager size = {0}, managerToModel size = {1}", //$NON-NLS-1$
+					modelToManager.size(), managerToModel.size());
+		}
+	}
+
 	@Override
 	public Object createWidget(final MUIElement element, Object parent) {
 		if (!(element instanceof MToolBar) || !(parent instanceof Composite)) {
@@ -566,8 +581,7 @@ public class ToolBarManagerRenderer extends SWTPartRenderer {
 		List<MUIElement> parts = container.getChildren();
 		if (parts != null) {
 			MUIElement[] plist = parts.toArray(new MUIElement[parts.size()]);
-			for (int i = 0; i < plist.length; i++) {
-				MUIElement childME = plist[i];
+			for (MUIElement childME : plist) {
 				modelProcessSwitch(parentManager, (MToolBarElement) childME);
 			}
 		}
@@ -805,6 +819,10 @@ public class ToolBarManagerRenderer extends SWTPartRenderer {
 	public void linkModelToManager(MToolBar model, ToolBarManager manager) {
 		modelToManager.put(model, manager);
 		managerToModel.put(manager, model);
+		if (Policy.DEBUG_RENDERER) {
+			logger.debug("\nTBMR:linkModelToManager: modelToManager size = {0}, managerToModel size = {1}", //$NON-NLS-1$
+					modelToManager.size(), managerToModel.size());
+		}
 	}
 
 	/**
@@ -812,8 +830,19 @@ public class ToolBarManagerRenderer extends SWTPartRenderer {
 	 * @param manager
 	 */
 	public void clearModelToManager(MToolBar model, ToolBarManager manager) {
+		for (MToolBarElement element : model.getChildren()) {
+			if (element instanceof MToolBar) {
+				clearModelToManager((MToolBar) element, getManager((MToolBar) element));
+			}
+			IContributionItem ici = getContribution(element);
+			clearModelToContribution(element, ici);
+		}
 		modelToManager.remove(model);
 		managerToModel.remove(manager);
+		if (Policy.DEBUG_RENDERER) {
+			logger.debug("\nTBMR:clearModelToManager: modelToManager size = {0}, managerToModel size = {1}", //$NON-NLS-1$
+					modelToManager.size(), managerToModel.size());
+		}
 	}
 
 	/**
@@ -839,6 +868,11 @@ public class ToolBarManagerRenderer extends SWTPartRenderer {
 	public void linkModelToContribution(MToolBarElement model, IContributionItem item) {
 		modelToContribution.put(model, item);
 		contributionToModel.put(item, model);
+		if (Policy.DEBUG_RENDERER) {
+			logger.debug(
+					"\nTBMR:linkModelToContribution: modelToContribution size = {0}, contributionToModel size = {1}", //$NON-NLS-1$
+					modelToContribution.size(), contributionToModel.size());
+		}
 	}
 
 	/**
@@ -846,8 +880,19 @@ public class ToolBarManagerRenderer extends SWTPartRenderer {
 	 * @param item
 	 */
 	public void clearModelToContribution(MToolBarElement model, IContributionItem item) {
+		if (model instanceof MToolBar) {
+			for (MToolBarElement element : ((MToolBar) model).getChildren()) {
+				IContributionItem ici = getContribution(element);
+				clearModelToContribution(element, ici);
+			}
+		}
 		modelToContribution.remove(model);
 		contributionToModel.remove(item);
+		if (Policy.DEBUG_RENDERER) {
+			logger.debug(
+					"\nTBMR:clearModelToContribution: modelToContribution size = {0}, contributionToModel size = {1}", //$NON-NLS-1$
+					modelToContribution.size(), contributionToModel.size());
+		}
 	}
 
 	/**

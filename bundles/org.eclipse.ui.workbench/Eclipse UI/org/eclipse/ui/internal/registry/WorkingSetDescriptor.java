@@ -13,6 +13,7 @@ package org.eclipse.ui.internal.registry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -90,8 +91,7 @@ public class WorkingSetDescriptor implements IPluginContribution {
 		if (containsChildren.length > 0) {
 			List byClassList = new ArrayList(containsChildren.length);
 			List byAdapterList = new ArrayList(containsChildren.length);
-			for (int i = 0; i < containsChildren.length; i++) {
-				IConfigurationElement child = containsChildren[i];
+			for (IConfigurationElement child : containsChildren) {
 				String className = child
 						.getAttribute(IWorkbenchRegistryConstants.ATT_CLASS);
 				if (className != null)
@@ -119,7 +119,7 @@ public class WorkingSetDescriptor implements IPluginContribution {
      * @return the name space declaring this working set
      */
     public String getDeclaringNamespace() {
-		return configElement.getNamespaceIdentifier();
+    	return configElement.getNamespace();
     }
 
     /**
@@ -179,7 +179,7 @@ public class WorkingSetDescriptor implements IPluginContribution {
 		}
 
         IExtension extension = configElement.getDeclaringExtension();
-		String extendingPluginId = extension.getNamespaceIdentifier();
+        String extendingPluginId = extension.getNamespace();
         return AbstractUIPlugin.imageDescriptorFromPlugin(extendingPluginId,
                 icon);
     }

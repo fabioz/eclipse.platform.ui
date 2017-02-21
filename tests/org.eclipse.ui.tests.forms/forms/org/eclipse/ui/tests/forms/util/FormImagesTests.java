@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2015 IBM Corporation and others.
+ * Copyright (c) 2007, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Ralf M Petter<ralf.petter@gmail.com> - Bug 510241, 510826
  *******************************************************************************/
 
 package org.eclipse.ui.tests.forms.util;
@@ -21,10 +22,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.internal.forms.widgets.FormImages;
 import org.junit.Assert;
+import org.junit.Test;
 
-import junit.framework.TestCase;
-
-public class FormImagesTests extends TestCase {
+public class FormImagesTests {
+	@Test
 	public void testSingleton() throws Exception {
 		Display display = Display.getCurrent();
 		FormImages instance = FormImages.getInstance();
@@ -37,6 +38,7 @@ public class FormImagesTests extends TestCase {
 		Assert.assertNull("descriptors map", getDescriptors(FormImages.getInstance()));
 	}
 
+	@Test
 	public void testDisposeOne() throws Exception {
 		Display display = Display.getCurrent();
 		Image gradient = FormImages.getInstance().getGradient(new Color(display, 255, 255, 255), new Color(display, 0, 0, 0), 21, 21, 0, display);
@@ -46,6 +48,7 @@ public class FormImagesTests extends TestCase {
 		Assert.assertNull("descriptors map", getDescriptors(FormImages.getInstance()));
 	}
 
+	@Test
 	public void testMultipleSimpleInstances() throws Exception {
 		Display display = Display.getCurrent();
 		Image gradient = FormImages.getInstance().getGradient(new Color(display, 200, 200, 200), new Color(display, 0, 0, 0), 30, 16, 3, display);
@@ -66,6 +69,33 @@ public class FormImagesTests extends TestCase {
 		Assert.assertNull("descriptors map", getDescriptors(FormImages.getInstance()));
 	}
 
+	@Test
+	public void testMultipleSectionGradientInstances() throws Exception {
+		Display display = Display.getCurrent();
+		Image gradient = FormImages.getInstance().getSectionGradientImage(new Color(display, 200, 200, 200),
+				new Color(display, 0, 0, 0), 30, 16, 3, display);
+		int count;
+		// ensure that the same image is returned for many calls with the same
+		// parameter
+		for (count = 1; count < 20; count++)
+			Assert.assertEquals("getSectionGradientImage(...) returned a different image for the same params on iteration " + count,
+					gradient, FormImages.getInstance().getSectionGradientImage(new Color(display, 200, 200, 200),
+							new Color(display, 0, 0, 0), 30, 16, 3, display));
+		for (; count > 0; count--) {
+			FormImages.getInstance().markFinished(gradient, display);
+			if (count != 1)
+				// ensure that the gradient is not disposed early
+				Assert.assertFalse("markFinished(...) disposed a shared image early on iteration " + count,
+						gradient.isDisposed());
+			else
+				// ensure that the gradient is disposed on the last markFinished
+				Assert.assertTrue("markFinished(...) did not dispose a shared image on the last call",
+						gradient.isDisposed());
+		}
+		Assert.assertNull("descriptors map", getDescriptors(FormImages.getInstance()));
+	}
+
+	@Test
 	public void testMultipleComplexInstances() throws Exception {
 		Display display = Display.getCurrent();
 		Image gradient = FormImages.getInstance().getGradient(new Color[] {new Color(display, 200, 200, 200), new Color(display, 0, 0, 0)},
@@ -88,6 +118,7 @@ public class FormImagesTests extends TestCase {
 		Assert.assertNull("descriptors map", getDescriptors(FormImages.getInstance()));
 	}
 
+	@Test
 	public void testMultipleUniqueInstances() throws Exception {
 		Display display = Display.getCurrent();
 		Image[] images = new Image[24];
@@ -142,6 +173,7 @@ public class FormImagesTests extends TestCase {
 		Assert.assertNull("descriptors map", getDescriptors(FormImages.getInstance()));
 	}
 
+	@Test
 	public void testComplexEquality() throws Exception {
 		Display display = Display.getCurrent();
 		Image image1 = FormImages.getInstance().getGradient(new Color[] {new Color(display,0,0,0), new Color(display,255,255,255)},
@@ -161,6 +193,7 @@ public class FormImagesTests extends TestCase {
 		Assert.assertNull("descriptors map", getDescriptors(FormImages.getInstance()));
 	}
 
+	@Test
 	public void testToolkitColors() throws Exception {
 		String blueKey = "blue";
 		String redKey = "red";
@@ -190,6 +223,7 @@ public class FormImagesTests extends TestCase {
 		Assert.assertNull("descriptors map", getDescriptors(FormImages.getInstance()));
 	}
 
+	@Test
 	public void testDisposeUnknown() throws Exception {
 		Display display = Display.getCurrent();
 		Image image = new Image(display, 10, 10);
