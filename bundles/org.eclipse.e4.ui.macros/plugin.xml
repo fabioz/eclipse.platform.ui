@@ -24,6 +24,12 @@
             class="org.eclipse.e4.ui.macros.internal.keybindings.KeyBindingDispatcherInterceptorInstaller">
       </macroStateListener>
    </extension>
+   <extension
+         point="org.eclipse.e4.core.macros.macroStateListeners">
+      <macroStateListener
+            class="org.eclipse.e4.ui.macros.internal.editors.EditorsMacroInstructionGenerator">
+      </macroStateListener>
+   </extension>
 
    <extension
          point="org.eclipse.ui.commands">
@@ -69,5 +75,78 @@
       </menuContribution>
    </extension>
 
+   <extension point="org.eclipse.e4.core.macros.whitelistedCommands">
+      <whitelistedCommand id="org.eclipse.ui.edit.cut" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.copy" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.paste" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.delete" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.undo" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.redo" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.window.activateEditor" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.findNext" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.findIncremental" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.selectAll" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.join.lines" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.delete.line" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.removeTrailingWhitespace" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.delete.line.to.beginning" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.delete.line.to.end" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.cut.line" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.cut.line.to.beginning" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.cut.line.to.end" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.lineUp" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.lineDown" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.lineStart" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.lineEnd" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.columnPrevious" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.columnNext" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.pageUp" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.pageDown" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.wordPrevious" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.wordNext" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.textStart" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.textEnd" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.windowStart" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.goto.windowEnd" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.scroll.lineUp" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.scroll.lineDown" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.lineUp" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.lineDown" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.lineStart" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.lineEnd" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.columnPrevious" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.columnNext" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.pageUp" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.pageDown" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.wordPrevious" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.wordNext" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.textStart" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.textEnd" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.windowStart" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.select.windowEnd" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.deletePrevious" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.deleteNext" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.deletePreviousWord" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.deleteNextWord" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.shiftRight" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.shiftLeft" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.toggleOverwrite" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.smartEnter" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.smartEnterInverse" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.moveLineUp" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.moveLineDown" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.copyLineUp" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.copyLineDown" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.upperCase" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.lowerCase" recordMacroInstruction="true"/>
+      <whitelistedCommand id="org.eclipse.ui.edit.text.toggleInsertMode" recordMacroInstruction="true"/>
+   </extension>
+   <extension
+         point="org.eclipse.e4.core.macros.macroInstructionsFactory">
+      <macroInstructionsFactory
+            class="org.eclipse.e4.ui.macros.styled_text.StyledTextKeyDownMacroInstructionFactory"
+            macroInstructionId="org.eclipse.ui.texteditor.macro.styledTextKeyDownMacroInstruction">
+      </macroInstructionsFactory>
+   </extension>
 
 </plugin>

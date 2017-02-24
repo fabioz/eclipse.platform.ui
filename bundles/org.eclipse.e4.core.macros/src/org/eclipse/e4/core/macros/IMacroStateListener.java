@@ -22,6 +22,8 @@ public interface IMacroStateListener {
 	 *
 	 * @param macroService
 	 *            the macro service where the change happened.
+	 * @throws CancelMacroException
+	 *             to cancel a macro record or playback.
 	 */
-	public void macroStateChanged(EMacroService macroService);
+	public void macroStateChanged(EMacroService macroService) throws CancelMacroException;
 }
